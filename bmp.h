@@ -1,8 +1,6 @@
 // BMP.H
-
 #ifndef BMP_H
 #define BMP_H
-
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -10,10 +8,9 @@
 
 typedef unsigned char byte;
 typedef unsigned short word;
-typedef unsigned long int dword;
+typedef unsigned int dword;
 
 // BMP HEADER
-
 typedef struct tagBITMAPFILEHEADER {
     // BMP file header (14 bytes)
      word bfType;			// file type 
@@ -41,12 +38,39 @@ typedef struct tagBITMAPFILEHEADER {
 }BMPHeader;
 
 
-// member function
-void init_bmp(BMPHeader* bmp_p, unsigned long width, unsigned long height, int depth)
+// check platform
+int check_platform()
 {
+	if(sizeof(byte)!=1)
+	{
+		printf("Error: size of type (unsigned char) is not 1!\n");
+		return 0;
+	}
+	if(sizeof(word)!=2)
+	{
+		printf("Error: size of type (unsigned short) is not 2!\n");
+		return 0;
+	}
+	if(sizeof(dword)!=4)
+	{
+		printf("Error: size of type (unsigned int) is not 4!\n");
+		return 0;
+	}
+	return 1;
+}
+
+// member function
+void init_bmp(
+	BMPHeader* bmp_p, 
+	unsigned long width, 
+	unsigned long height, 
+	int depth)
+{
+	if(!check_platform())
+		return;
 	bmp_p-> bfType = 0x4D42;
-	// be careful with the disk alignment
-	unsigned long real_width = ((3*width-1)/4+1)*4;
+	unsigned long real_width = 
+		((3*width-1)/4+1)*4; // storage alignment
 	bmp_p-> bfSize = 0x36 + real_width*height;
 	bmp_p-> bfReserved1 = 0x0;
 	bmp_p-> bfReserved2 = 0x0;
@@ -57,42 +81,73 @@ void init_bmp(BMPHeader* bmp_p, unsigned long width, unsigned long height, int d
 	bmp_p-> biWidth = width;
 	bmp_p-> biHeight = height;
 	bmp_p-> biPlanes = 0x01;
-	// COLOR DEPTH
 	bmp_p-> biBitCount = depth;
 	bmp_p-> biCompression = 0;
 	bmp_p-> biSizeImage = bmp_p->bfSize - 0x36;
-	// RESOLUTION IS IMPORTANT
     bmp_p-> biXPelsPerMeter = 0;
     bmp_p-> biYPelsPerMeter = 0;
     bmp_p-> biClrUsed = 0;
     bmp_p-> biClrImportant = 0;
 };
 
-void fill_header(FILE* fp, BMPHeader* hd)
+void write_header(FILE * fp, BMPHeader * hd)
 {
-	 // BMP file header (14 bytes)
-	fwrite(&hd->bfType, sizeof(word), 1, fp);
-    fwrite(&hd->bfSize, sizeof(dword), 1, fp);
-	fwrite(&hd->bfReserved1, sizeof(word), 1, fp);
-	fwrite(&hd->bfReserved2, sizeof(word), 1, fp);
-	fwrite(&hd->bfOffBits, sizeof(dword), 1, fp);
+	if(!check_platform())
+		return;
+	// BMP file header (14 bytes)
+	fwrite((char*)&hd->bfType, sizeof(word), 1, fp);
+    fwrite((char*)&hd->bfSize, sizeof(dword), 1, fp);
+	fwrite((char*)&hd->bfReserved1, sizeof(word), 1, fp);
+	fwrite((char*)&hd->bfReserved2, sizeof(word), 1, fp);
+	fwrite((char*)&hd->bfOffBits, sizeof(dword), 1, fp);
 
     // BMP information head (40 bytes)
-	fwrite(&hd->biSize, sizeof(dword), 1, fp);
-    fwrite(&hd->biWidth, sizeof(dword), 1, fp);
-    fwrite(&hd->biHeight, sizeof(dword), 1, fp);
-    fwrite(&hd->biPlanes, sizeof(word), 1, fp);
-    fwrite(&hd->biBitCount, sizeof(word), 1, fp);
-    fwrite(&hd->biCompression, sizeof(dword), 1, fp);
-    fwrite(&hd->biSizeImage, sizeof(dword), 1, fp);
-    fwrite(&hd->biXPelsPerMeter, sizeof(dword), 1, fp);
-    fwrite(&hd->biYPelsPerMeter, sizeof(dword), 1, fp);
-    fwrite(&hd->biClrUsed, sizeof(dword), 1, fp);
-    fwrite(&hd->biClrImportant, sizeof(dword), 1, fp);
+	fwrite((char*)&hd->biSize, sizeof(dword), 1, fp);
+    fwrite((char*)&hd->biWidth, sizeof(dword), 1, fp);
+    fwrite((char*)&hd->biHeight, sizeof(dword), 1, fp);
+    fwrite((char*)&hd->biPlanes, sizeof(word), 1, fp);
+    fwrite((char*)&hd->biBitCount, sizeof(word), 1, fp);
+    fwrite((char*)&hd->biCompression, sizeof(dword), 1, fp);
+    fwrite((char*)&hd->biSizeImage, sizeof(dword), 1, fp);
+    fwrite((char*)&hd->biXPelsPerMeter, sizeof(dword), 1, fp);
+    fwrite((char*)&hd->biYPelsPerMeter, sizeof(dword), 1, fp);
+    fwrite((char*)&hd->biClrUsed, sizeof(dword), 1, fp);
+    fwrite((char*)&hd->biClrImportant, sizeof(dword), 1, fp);
 }
 
-void save_data_as_bitmap(unsigned char** mat, unsigned long width, unsigned long height, char* file_name)
+void read_header(FILE * fp, BMPHeader * hd)
 {
+	if(!check_platform())
+		return;
+	// file header (14 bytes)
+	fread((char*)&hd->bfType, sizeof(word), 1, fp);
+	fread((char*)&hd->bfSize, sizeof(dword), 1, fp);
+	fread((char*)&hd->bfReserved1, sizeof(word), 1, fp);
+	fread((char*)&hd->bfReserved2, sizeof(word), 1, fp);
+	fread((char*)&hd->bfOffBits, sizeof(dword), 1, fp);
+
+    	// BMP information head (40 bytes)
+	fread((char*)&hd->biSize, sizeof(dword), 1, fp);
+    	fread((char*)&hd->biWidth, sizeof(dword), 1, fp);
+    	fread((char*)&hd->biHeight, sizeof(dword), 1, fp);
+    	fread((char*)&hd->biPlanes, sizeof(word), 1, fp);
+    	fread((char*)&hd->biBitCount, sizeof(word), 1, fp);
+    	fread((char*)&hd->biCompression, sizeof(dword), 1, fp);
+    	fread((char*)&hd->biSizeImage, sizeof(dword), 1, fp);
+    	fread((char*)&hd->biXPelsPerMeter, sizeof(dword), 1, fp);
+    	fread((char*)&hd->biYPelsPerMeter, sizeof(dword), 1, fp);
+	fread((char*)&hd->biClrUsed, sizeof(dword), 1, fp);
+    	fread((char*)&hd->biClrImportant, sizeof(dword), 1, fp);
+}
+
+void save_data_as_bitmap(
+	unsigned char** mat, 
+	unsigned long width, 
+	unsigned long height, 
+	char* file_name)
+{
+	if(!check_platform())
+		return;
 	BMPHeader bitmap_h;
 	unsigned short depth = 0x18;
 	
@@ -102,7 +157,7 @@ void save_data_as_bitmap(unsigned char** mat, unsigned long width, unsigned long
 	
 	// fill header
 	// be careful with the memory alignment
-	fill_header(fp, &bitmap_h);
+	write_header(fp, &bitmap_h);
 	
 	// write data to colour matrix in file
 	// be careful! data are put in the file upside down
@@ -116,13 +171,13 @@ void save_data_as_bitmap(unsigned char** mat, unsigned long width, unsigned long
 	{
 		for(unsigned long j=0;j<width;j++)
 		{
-			fwrite(&mat[height-1-i][j], sizeof(unsigned char), 1, fp);
-			fwrite(&mat[height-1-i][j], sizeof(unsigned char), 1, fp);
-			fwrite(&mat[height-1-i][j], sizeof(unsigned char), 1, fp);
+			fwrite((char*)&mat[height-1-i][j], sizeof(unsigned char), 1, fp);
+			fwrite((char*)&mat[height-1-i][j], sizeof(unsigned char), 1, fp);
+			fwrite((char*)&mat[height-1-i][j], sizeof(unsigned char), 1, fp);
 		}
 		for(int j=0;j<edge_n;j++)
 		{
-			fwrite(&seg, sizeof(unsigned char), 1, fp);
+			fwrite((char*)&seg, sizeof(unsigned char), 1, fp);
 		}
 	}
 	
@@ -130,6 +185,35 @@ void save_data_as_bitmap(unsigned char** mat, unsigned long width, unsigned long
 	fclose(fp);
 }
 
+// read information from bitmap file
+void read_info_from_bitmap(char * file_name)
+{
+	if(!check_platform())
+		return;
+	FILE * fp = fopen(file_name, "r+b");
+	BMPHeader hd;
+	read_header(fp, &hd);
+	printf("Image information:\n");
+	// BMP file header (14 bytes)
+	printf("bfType: %x\n", hd.bfType);
+    	printf("bfSize: %u\n", hd.bfSize);
+	printf("bfReserved1: %x\n", hd.bfReserved1);
+	printf("bfReserved2: %x\n", hd.bfReserved2);
+	printf("bfOffBits: %x\n", hd.bfOffBits);
+
+    	// BMP information head (40 bytes)
+    	printf("biSize: %u\n", hd.biSize);
+    	printf("biWidth: %u\n", hd.biWidth);
+    	printf("biHeight: %u\n", hd.biHeight);
+    	printf("biPlanes: %d\n", hd.biPlanes);
+    	printf("biBitCount: %d\n", hd.biBitCount);
+    	printf("biCompression: %u\n", hd.biCompression);
+    	printf("biSizeImage: %u\n", hd.biSizeImage);
+    	printf("biXResolution: %u\n", hd.biXPelsPerMeter);
+    	printf("biYResolution: %u\n", hd.biYPelsPerMeter);
+    	printf("biClrUsed: %u\n", hd.biClrUsed);
+    	printf("biClrImportant: %u\n", hd.biClrImportant);
+}
 
 #endif
 
