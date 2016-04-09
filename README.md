@@ -13,4 +13,3 @@ for(int i=0; i<height; i++)
         bitmap[i*width+j]=(i*j)%256;
 save_as_bitmap(bitmap, "data.jpg");
 
-```c++
