@@ -18,7 +18,7 @@ Note: this project has been used in other projects of mine:
 
 computer graphics : ray trace app; ==> embedded for saving shots of 3D animation.
 
-sophisticated system : civilization evolution stimulation visualization.
+sophisticated system : civilization evolution simulation visualization.
 
 deep learning : auto layout neuron network applied on MNIST/CIFAR-10/CIFAR-100/ST-10/SVHN image datasets.
 
